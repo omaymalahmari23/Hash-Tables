@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Hash Table Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 20px;
+            gap: 50px;
+        }
+
+        .hash-table {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bucket {
+            display: flex;
+            align-items: center;
+            border: 2px solid #eb65f7;
+            border-radius: px;
+            padding: 10px;
+            background-color: #f3e9f4;
+            min-width: 300px;
+            height: 50px;
+            position: relative;
+        }
+
+        .bucket span {
+            position: absolute;
+            top: -15px;
+            left: 10px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .key {
+            display: inline-block;
+            background-color: #eb65f7;
+            color: white;
+            border-radius: 5px;
+            padding: 5px 20px;
+            margin-left: 20px;
+            animation: slide 1s ease-out;
+        }
+
+        @keyframes slide {
+            from {
+                transform: translateX(-200%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 300px;
+        }
+
+        .controls input, .controls button {
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #eb65f7;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .controls button {
+            background-color: #cdacf3;
+            color: white;
+            cursor: pointer;
+        }
+
+        .controls button:hover {
+            background-color: #9a90f3;
+        }
+
+        .log {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Hash Table Visualization</h1>
+    <div class="container">
+        <div id="hashTable" class="hash-table"></div>
+        <div class="controls">
+            <input type="text" id="keyInput" placeholder="Enter a String Key">
+            <button onclick="addString()">Add String Key</button>
+            <div class="log" id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const hashTable = Array(7).fill(null).map(() => []); // Hash table with 7 buckets
+        const hashTableElement = document.getElementById("hashTable");
+        const logElement = document.getElementById("log");
+
+        function hashFunction(key) {
+            let hash = 0;
+            let details = `Hash Calculation for "${key}":<br>`;
+
+            for (let i = 0; i < key.length; i++) {
+                const charCode = key.charCodeAt(i);
+                hash += charCode;
+                details += `Character: ${key[i]} (Code: ${charCode}) -> Running Total: ${hash}<br>`;
+            }
+            
+            const mod = hash % hashTable.length;
+            details += `Final hash value (sum mod ${hashTable.length}): ${hash} % ${hashTable.length} = ${mod}`;
+            addLog(details);
+            return mod;
+        }
+
+        function renderHashTable() {
+            hashTableElement.innerHTML = "";
+            hashTable.forEach((bucket, index) => {
+                const bucketDiv = document.createElement("div");
+                bucketDiv.className = "bucket";
+                bucketDiv.innerHTML = `<span>Bucket ${index}</span>`;
+                bucket.forEach(item => {
+                    const keyDiv = document.createElement("div");
+                    keyDiv.className = "key";
+                    keyDiv.textContent = item;
+                    bucketDiv.appendChild(keyDiv);
+                });
+                hashTableElement.appendChild(bucketDiv);
+            });
+        }
+
+        function addLog(message) {
+            const logEntry = document.createElement("div");
+            logEntry.className = "log-entry";
+            logEntry.innerHTML = message;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function addString() {
+            const key = document.getElementById("keyInput").value.trim();
+            if (!key) {
+                addLog("Please enter a valid string key.");
+                return;
+            }
+
+            const hash = hashFunction(key);
+            const bucket = hashTable[hash];
+            
+            if (!bucket.includes(key)) {
+                bucket.push(key);
+                addLog(`String "${key}" hashed to bucket ${hash}.`);
+            } else {
+                addLog(`String "${key}" already exists in bucket ${hash}.`);
+            }
+
+            renderHashTable();
+            document.getElementById("keyInput").value = "";
+        }
+
+        // Initialize the hash table
+        renderHashTable();
+    </script>
+</body>
+</html>
